@@ -218,7 +218,7 @@ class Pirate(QtWidgets.QMainWindow):
             else:
                 self.show()
 
-            self.vk['pipe'].put(Data(VK_AUTHORIZATION, data.item[:2]))
+            self.vk['pipe'].put(Data(VK_AUTHORIZATION, data.item[3:]))
 
 
         # В data.items - [id, fullname]
@@ -250,8 +250,15 @@ class Pirate(QtWidgets.QMainWindow):
     # closeEvent()
     #---------------------------------------------------------------------------
     def closeEvent(self, event):
+        data = [self.vk_phone, self.vk_password]
+        self.db['pipe'].put(Data(DB_PASSWORD, data))
+
+        data = [self.saveGeometry(), self.splitter.saveState()]
+        self.db['pipe'].put(Data(DB_GEOMETRY, data))
+
         self.vk['pipe'].put(Data(TERMINATE, None))
         self.db['pipe'].put(Data(TERMINATE, None))
+
         event.accept()
 
 

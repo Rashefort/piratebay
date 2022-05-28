@@ -29,6 +29,9 @@ VK_AUTHORIZATION:    int = 200
 VK_FAILURE:          int = 210
 VK_CAPTCHA:          int = 220
 
+DB_PASSWORD:         int = 300
+DB_GEOMETRY:         int = 310
+
 TERMINATE:           int = 999
 
 SPLASH_TEXT:         str = 'Загрузка данных...'

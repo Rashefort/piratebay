@@ -36,7 +36,6 @@ class VKontakte(QtCore.QThread):
                 if captcha is None:
                     self.session = vk_api.VkApi(login=login, password=password)
                     self.session.auth()
-
                 else:
                     captcha.try_again(captcha.text)
 

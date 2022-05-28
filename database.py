@@ -6,6 +6,8 @@ from config import TEMPORARY
 from config import DATABASE
 
 from config import CREATE_WINDOW
+from config import DB_PASSWORD
+from config import DB_GEOMETRY
 from config import TERMINATE
 from config import Data
 
@@ -16,6 +18,8 @@ class Database(QtCore.QThread):
     signal = QtCore.pyqtSignal(Data)
 
     SQL = {
+        DB_PASSWORD: 'UPDATE Text SET phone=?, password=?',
+        DB_GEOMETRY: 'UPDATE Window SET geometry=?, splitter=?',
     }
 
 
@@ -44,9 +48,9 @@ class Database(QtCore.QThread):
 
 
     #---------------------------------------------------------------------------
-    def __make(self, command, data):
+    def __make(self, command, items):
         self.query.prepare(command)
-        for item in data:
+        for item in items:
             self.query.addBindValue(item)
 
         self.query.exec_()
@@ -58,6 +62,11 @@ class Database(QtCore.QThread):
         data = self.__prepare()
 
         self.signal.emit(Data(command, data))
+
+
+    #---------------------------------------------------------------------------
+    def update(self, command, items):
+        self.__make(Database.SQL[command], items)
 
 
     #---------------------------------------------------------------------------
@@ -83,7 +92,8 @@ class Database(QtCore.QThread):
 
 
         while (data := self.pipe.get()).id != TERMINATE:
-            pass
+            if data.id <= DB_GEOMETRY:
+                self.update(data.id, data.items)
 
 
     #---------------------------------------------------------------------------
