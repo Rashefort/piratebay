@@ -20,7 +20,7 @@ class Pirate(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         QtWidgets.QMainWindow.__init__(self, parent)
         self.buttons = list()       # Кнопки toolbar'а
-        self.loot = 0               # Отмеченная "музыка"
+        self.total = 0               # Отмеченная "музыка"
 
         self.vk = self.create_stream(VKontakte, self.handler)
         self.db = self.create_stream(Database, self.handler)
@@ -62,6 +62,15 @@ class Pirate(QtWidgets.QMainWindow):
         self.setCursor(WAITCURSOR if disable else ARROWCURSOR)
         for button in self.buttons:
             button.setDisabled(disable)
+
+
+    #---------------------------------------------------------------------------
+    # "Светофор" в статусбаре
+    #---------------------------------------------------------------------------
+    def traffic_light(self, light, text):
+        self.current_light = light
+        self.light.setPixmap(QtGui.QPixmap(light))
+        self.status.setText(text)
 
 
     #---------------------------------------------------------------------------
@@ -119,15 +128,19 @@ class Pirate(QtWidgets.QMainWindow):
         self.statusBar = self.statusBar()
         self.statusBar.setSizeGripEnabled(False)
 
-        self.lbUser = QtWidgets.QLabel(CONNECT_TEXT)
-        self.lbUser.setMinimumSize(50, 20)
-        self.lbUser.setFrameStyle(STYLEDPANEL | PLAIN)
-        self.statusBar.addWidget(self.lbUser, stretch=1)
+        self.light = QtWidgets.QLabel(self)
+        self.light.setPixmap(QtGui.QPixmap(TRAFFIC_RED))
+        self.statusBar.addWidget(self.light)
 
-        self.lbLoot = QtWidgets.QLabel(TAGGED_TEXT % self.loot)
-        self.lbLoot.setMinimumSize(50, 20)
-        self.lbLoot.setFrameStyle(STYLEDPANEL | PLAIN)
-        self.statusBar.addPermanentWidget(self.lbLoot)
+        self.status = QtWidgets.QLabel(CONNECT_TEXT)
+        self.status.setMinimumSize(50, 20)
+        self.status.setFrameStyle(STYLEDPANEL | PLAIN)
+        self.statusBar.addWidget(self.status, stretch=1)
+
+        self.loot = QtWidgets.QLabel(TAGGED_TEXT % self.total)
+        self.loot.setMinimumSize(50, 20)
+        self.loot.setFrameStyle(STYLEDPANEL | PLAIN)
+        self.statusBar.addPermanentWidget(self.loot)
 
         self.addToolBar(QtCore.Qt.TopToolBarArea, toolBar)
 
@@ -136,12 +149,13 @@ class Pirate(QtWidgets.QMainWindow):
     # Ввод телефона и пароля
     #---------------------------------------------------------------------------
     def credentials(self):
-        statusbar_text = self.lbUser.text()
+        status_light = self.current_light
+        status_text = self.status.text()
         phone = self.vk_phone
         password = self.vk_password
 
         self.switch_toolbar(disable=True)
-        self.lbUser.setText(CONNECT_TEXT)
+        self.traffic_light(TRAFFIC_YELLOW, CONNECT_TEXT)
 
         window = Account(self.vk_phone, self.vk_password, self)
         result = window.exec()
@@ -152,12 +166,12 @@ class Pirate(QtWidgets.QMainWindow):
 
         if not phone or not password:
             Message(CRITICAL, ERROR_EMPTYPASSWORD, parent=self)
-            self.lbUser.setText(statusbar_text)
+            self.traffic_light(status_light, status_text)
             self.switch_toolbar(disable=False)
 
         elif [phone, password] == [self.vk_phone, self.vk_password]:
             Message(WARNING, OLDPASSWORD_TEXT, parent=self)
-            self.lbUser.setText(statusbar_text)
+            self.traffic_light(status_light, status_text)
             self.switch_toolbar(disable=False)
 
         else:
@@ -214,7 +228,7 @@ class Pirate(QtWidgets.QMainWindow):
                 self.show()
 
             self.vk_id, self.vk_name = data.items
-            self.lbUser.setText(self.vk_name)
+            self.traffic_light(TRAFFIC_GREEN, self.vk_name)
             self.switch_toolbar(disable=False)
 
 
@@ -228,7 +242,7 @@ class Pirate(QtWidgets.QMainWindow):
         # В data.items - ["текст ошибки"]
         elif data.id == VK_FAILURE:
             Message(CRITICAL, data.item, parent=self)
-            self.lbUser.setText(FAILURE_TEXT)
+            self.traffic_light(TRAFFIC_RED, FAILURE_TEXT)
             self.switch_toolbar(disable=False)
 
 

@@ -23,30 +23,34 @@ PLAIN       = QtWidgets.QFrame.Plain
 DATABASE    = 'piratebay.db'
 TEMPORARY   = Path(os.environ['TEMP'])
 
-CREATE_WINDOW:          int = 100
+CREATE_WINDOW:       int = 100
 
-VK_AUTHORIZATION:       int = 200
-VK_FAILURE:             int = 210
-VK_CAPTCHA:             int = 220
+VK_AUTHORIZATION:    int = 200
+VK_FAILURE:          int = 210
+VK_CAPTCHA:          int = 220
 
-TERMINATE:              int = 999
+TERMINATE:           int = 999
 
-SPLASH_TEXT:            str = 'Загрузка данных...'
-CONNECT_TEXT:           str = 'Подключение к ВК...'
-CAPTCHA_TEXT:           str = 'Введите текст на картинке'
-TAGGED_TEXT:            str = ' Выбрано %d'
-FAILURE_TEXT:           str = 'Связь с VK не установлена'
-NEWPASSWORD_TEXT:       str = 'Данные успешно изменены'
-OLDPASSWORD_TEXT:       str = 'Данные остались прежними'
+SPLASH_TEXT:         str = 'Загрузка данных...'
+CONNECT_TEXT:        str = 'Подключение к ВК...'
+CAPTCHA_TEXT:        str = 'Введите текст на картинке'
+TAGGED_TEXT:         str = ' Выбрано %d'
+FAILURE_TEXT:        str = 'Связь с VK не установлена'
+NEWPASSWORD_TEXT:    str = 'Данные успешно изменены'
+OLDPASSWORD_TEXT:    str = 'Данные остались прежними'
 
-ERROR_EMPTYPASSWORD:    str = 'Не задан телефон или пароль'
-ERROR_BADPASSWORD:      str = 'Неверный телефон или пароль'
+ERROR_EMPTYPASSWORD: str = 'Не задан телефон или пароль'
+ERROR_BADPASSWORD:   str = 'Неверный телефон или пароль'
 
-INFO_RELOAD_FRIENDS:    str = 'Обновить список друзей'
-INFO_SAVE_SELECTED:     str = 'Сохранить отмеченное'
-INFO_DOWNLOAD_MUSIC:    str = 'Скачать выбранные треки'
-INFO_AUTHORIZATION:     str = 'Настройки учетной записи'
-INFO_HELP:              str = 'Помощь'
+INFO_RELOAD_FRIENDS: str = 'Обновить список друзей'
+INFO_SAVE_SELECTED:  str = 'Сохранить отмеченное'
+INFO_DOWNLOAD_MUSIC: str = 'Скачать выбранные треки'
+INFO_AUTHORIZATION:  str = 'Настройки учетной записи'
+INFO_HELP:           str = 'Помощь'
+
+TRAFFIC_RED:         str = str(TEMPORARY / 'red.png')
+TRAFFIC_YELLOW:      str = str(TEMPORARY / 'yellow.png')
+TRAFFIC_GREEN:       str = str(TEMPORARY / 'green.png')
 
 
 # Класс для передачи данных между потоками
