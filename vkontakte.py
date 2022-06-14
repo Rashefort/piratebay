@@ -75,7 +75,7 @@ class VKontakte(QtCore.QThread):
     def get_friends(self):
         friends_ids = self.account.friends.get(user_id=14314571)['items']
         friends_str = ','.join(list(map(str, friends_ids)))
-        info = self.account.users.get(user_ids=friends_str)#[:10] # <---------------------------------
+        info = self.account.users.get(user_ids=friends_str)
 
         self.signal.emit(Data(VK_FRIENDS, info))
 

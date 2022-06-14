@@ -257,17 +257,11 @@ class Pirate(QtWidgets.QMainWindow):
 
         # В data.items - [{id, first_name, last_name, ...}, ...]
         elif data.id == VK_FRIENDS:
-            data = self.friends.recruits(data.items)
+            data = self.friends.recruits(self.vk_id, data.items)
 
-            if data['add']:
-                add = list(map(lambda x: x + [0, self.vk_id], data['add']))
-                self.db['pipe'].put(Data(DB_ADDFRIENDS, add))
-
-            if data['ren']:
-                self.db['pipe'].put(Data(DB_RENFRIENDS, data['ren']))
-
-            if data['del']:
-                self.db['pipe'].put(Data(DB_DELFRIENDS, data['del']))
+            for key in data:
+                if data[key]:
+                    self.db['pipe'].put(Data(key, data[key]))
 
 
             print('Готов к труду и обороне')

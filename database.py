@@ -44,8 +44,6 @@ class Database(QtCore.QThread):
         self.query = QtSql.QSqlQuery()
         self.pipe = pipe
 
-        self.db_total = 0
-
 
     #---------------------------------------------------------------------------
     def __prepare(self):
@@ -78,20 +76,7 @@ class Database(QtCore.QThread):
 
 
     #---------------------------------------------------------------------------
-    # def modification(self, command, items):
-    def insert(self, command, items):
-        for item in items:
-            self.__make(Database.SQL[command], item)
-
-
-    #---------------------------------------------------------------------------
-    def update(self, command, items):
-        for item in items:
-            self.__make(Database.SQL[command], item)
-
-
-    #---------------------------------------------------------------------------
-    def delete(self, command, items):
+    def modify(self, command, items):
         for item in items:
             self.__make(Database.SQL[command], item)
 
@@ -123,16 +108,10 @@ class Database(QtCore.QThread):
             self.base.transaction()
 
             if data.id <= DB_GETFRIENDS:
-                self.select(DB_GETFRIENDS, data.item)
+                self.select(data.id, data.item)
 
-            elif data.id <= DB_MASTERS:
-                self.insert(data.id, data.items)
-
-            elif data.id <= DB_GEOMETRY:
-                self.update(data.id, data.items)
-
-            elif data.id <= DB_DELFRIENDS:
-                self.delete(data.id, data.items)
+            else:
+                self.modify(data.id, data.items)
 
             self.base.commit()
 
