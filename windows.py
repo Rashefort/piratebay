@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from collections import OrderedDict
-
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -17,6 +15,22 @@ from config import INFORMATION
 from config import CRITICAL
 from config import WARNING
 
+
+
+#-------------------------------------------------------------------------------
+# "Друг" (или "буква") списка "друзей"
+#-------------------------------------------------------------------------------
+class Amigo(QtGui.QStandardItem):
+     def __init__(self, id, name, color):
+        QtGui.QStandardItem.__init__(self)
+
+        # Для "буквы" списка id вычисляется, как -1 * ord(буква)
+        self.id = id if id else -ord(name[0])
+        self.name = name
+
+        self.setForeground(QtGui.QBrush(QtGui.QColor(color)))
+        self.setEditable(False)
+        self.setText(self.name)
 
 
 #-------------------------------------------------------------------------------
@@ -45,7 +59,6 @@ class Friends(QtWidgets.QTreeView):
             self.friends[letter] = [[id, name, loot, color]]
 
         finally:
-            self.friends[letter].sort(key=lambda x: x[1])
             self.users.append([id, name])
 
 
@@ -77,7 +90,7 @@ class Friends(QtWidgets.QTreeView):
     # "Старые друзья"
     #---------------------------------------------------------------------------
     def veterans(self, friends):
-        self.friends = OrderedDict()
+        self.friends = dict()
         self.users = list()
 
         for friend in friends:
@@ -108,6 +121,36 @@ class Friends(QtWidgets.QTreeView):
                 self.__del(id, name)
 
         return modify
+
+
+    #---------------------------------------------------------------------------
+    # "Новые друзья"
+    #---------------------------------------------------------------------------
+    def show(self):
+        # Сортировка словаря по ключу
+        self.friends = dict(sorted(self.friends.items(), key=lambda x: x[0]))
+
+        # Сортировка по значению (имя) в каждом ключе
+        for letter in self.friends.keys():
+            self.friends[letter].sort(key=lambda x: x[1])
+
+        # Создание списка "друзей"
+        for letter in self.friends:
+            name = f'{letter} - {len(self.friends[letter])}'
+            color = COLOR_VETERANS
+
+            if any([i[3] == COLOR_RENAMED for i in self.friends[letter]]):
+                color = COLOR_RENAMED
+
+            if any([i[3] == COLOR_RECRUITS for i in self.friends[letter]]):
+                color = COLOR_RECRUITS
+
+            parent = Amigo(None, name, color)
+            self.root.appendRow(parent)
+
+            for friend in self.friends[letter]:
+                item = Amigo(friend[0], friend[1], friend[3])
+                parent.appendRow(item)
 
 
 #-------------------------------------------------------------------------------

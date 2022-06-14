@@ -263,8 +263,7 @@ class Pirate(QtWidgets.QMainWindow):
                 if data[key]:
                     self.db['pipe'].put(Data(key, data[key]))
 
-
-            print('Готов к труду и обороне')
+            self.friends.show()
 
 
     #---------------------------------------------------------------------------
