@@ -228,6 +228,9 @@ class Pirate(QtWidgets.QMainWindow):
                 self.show()
 
             self.vk_id, self.vk_name = data.items
+            self.db['pipe'].put(Data(DB_MASTERS, [[self.vk_id]]))
+            self.db['pipe'].put(Data(DB_GETFRIENDS, [[self.vk_id]]))
+
             self.traffic_light(TRAFFIC_GREEN, self.vk_name)
             self.switch_toolbar(disable=False)
 
@@ -246,14 +249,38 @@ class Pirate(QtWidgets.QMainWindow):
             self.switch_toolbar(disable=False)
 
 
+        # В data.items - [[id, name, loot], ...]
+        elif data.id == DB_GETFRIENDS:
+            self.vk['pipe'].put(Data(VK_FRIENDS, None))
+            self.friends.veterans(data.items)
+
+
+        # В data.items - [{id, first_name, last_name, ...}, ...]
+        elif data.id == VK_FRIENDS:
+            data = self.friends.recruits(data.items)
+
+            if data['add']:
+                add = list(map(lambda x: x + [0, self.vk_id], data['add']))
+                self.db['pipe'].put(Data(DB_ADDFRIENDS, add))
+
+            if data['ren']:
+                self.db['pipe'].put(Data(DB_RENFRIENDS, data['ren']))
+
+            if data['del']:
+                self.db['pipe'].put(Data(DB_DELFRIENDS, data['del']))
+
+
+            print('Готов к труду и обороне')
+
+
     #---------------------------------------------------------------------------
     # closeEvent()
     #---------------------------------------------------------------------------
     def closeEvent(self, event):
-        data = [self.vk_phone, self.vk_password]
+        data = [[self.vk_phone, self.vk_password]]
         self.db['pipe'].put(Data(DB_PASSWORD, data))
 
-        data = [self.saveGeometry(), self.splitter.saveState()]
+        data = [[self.saveGeometry(), self.splitter.saveState()]]
         self.db['pipe'].put(Data(DB_GEOMETRY, data))
 
         self.vk['pipe'].put(Data(TERMINATE, None))

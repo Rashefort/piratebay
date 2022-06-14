@@ -26,11 +26,17 @@ TEMPORARY   = Path(os.environ['TEMP'])
 CREATE_WINDOW:       int = 100
 
 VK_AUTHORIZATION:    int = 200
-VK_FAILURE:          int = 210
-VK_CAPTCHA:          int = 220
+VK_CAPTCHA:          int = 210
+VK_FAILURE:          int = 220
+VK_FRIENDS:          int = 230
 
-DB_PASSWORD:         int = 300
-DB_GEOMETRY:         int = 310
+DB_GETFRIENDS:       int = 300
+DB_ADDFRIENDS:       int = 310
+DB_MASTERS:          int = 320
+DB_PASSWORD:         int = 330
+DB_RENFRIENDS:       int = 340
+DB_GEOMETRY:         int = 350
+DB_DELFRIENDS:       int = 360
 
 TERMINATE:           int = 999
 
@@ -54,6 +60,10 @@ INFO_HELP:           str = 'Помощь'
 TRAFFIC_RED:         str = str(TEMPORARY / 'red.png')
 TRAFFIC_YELLOW:      str = str(TEMPORARY / 'yellow.png')
 TRAFFIC_GREEN:       str = str(TEMPORARY / 'green.png')
+
+COLOR_VETERANS:      str = '#000000'
+COLOR_RECRUITS:      str = '#E65100'
+COLOR_RENAMED:       str = '#AA00FF'
 
 
 # Класс для передачи данных между потоками

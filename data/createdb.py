@@ -27,6 +27,14 @@ if __name__ == '__main__':
             blob = file.read()
             cursor.execute("INSERT INTO Images VALUES (?, ?)", (f'splash.jpg', blob))
 
+
+        cursor.execute("CREATE TABLE Masters (id INTEGER PRIMARY KEY)")
+
+        cursor.execute("""
+            CREATE TABLE Friends(id INTEGER, name TEXT, loot INTEGER, master INTEGER,
+            FOREIGN KEY(master) REFERENCES Masters(id))
+        """)
+
         connection.commit()
         connection.close()
 

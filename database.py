@@ -6,6 +6,11 @@ from config import TEMPORARY
 from config import DATABASE
 
 from config import CREATE_WINDOW
+from config import DB_GETFRIENDS
+from config import DB_ADDFRIENDS
+from config import DB_RENFRIENDS
+from config import DB_DELFRIENDS
+from config import DB_MASTERS
 from config import DB_PASSWORD
 from config import DB_GEOMETRY
 from config import TERMINATE
@@ -13,13 +18,19 @@ from config import Data
 
 
 #-------------------------------------------------------------------------------
+# Работа с базой sqlite
 #-------------------------------------------------------------------------------
 class Database(QtCore.QThread):
     signal = QtCore.pyqtSignal(Data)
 
     SQL = {
-        DB_PASSWORD: 'UPDATE Text SET phone=?, password=?',
-        DB_GEOMETRY: 'UPDATE Window SET geometry=?, splitter=?',
+        DB_GETFRIENDS: 'SELECT id, name, loot FROM Friends WHERE master=?',
+        DB_ADDFRIENDS: 'INSERT OR IGNORE INTO Friends VALUES (?, ?, ?, ?)',
+        DB_MASTERS:    'INSERT OR IGNORE INTO Masters VALUES(?)',
+        DB_RENFRIENDS: 'UPDATE Friends SET name=? WHERE id=?',
+        DB_PASSWORD:   'UPDATE Text SET phone=?, password=?',
+        DB_GEOMETRY:   'UPDATE Window SET geometry=?, splitter=?',
+        DB_DELFRIENDS: 'DELETE FROM Friends WHERE id=?',
     }
 
 
@@ -32,6 +43,8 @@ class Database(QtCore.QThread):
 
         self.query = QtSql.QSqlQuery()
         self.pipe = pipe
+
+        self.db_total = 0
 
 
     #---------------------------------------------------------------------------
@@ -65,8 +78,22 @@ class Database(QtCore.QThread):
 
 
     #---------------------------------------------------------------------------
+    # def modification(self, command, items):
+    def insert(self, command, items):
+        for item in items:
+            self.__make(Database.SQL[command], item)
+
+
+    #---------------------------------------------------------------------------
     def update(self, command, items):
-        self.__make(Database.SQL[command], items)
+        for item in items:
+            self.__make(Database.SQL[command], item)
+
+
+    #---------------------------------------------------------------------------
+    def delete(self, command, items):
+        for item in items:
+            self.__make(Database.SQL[command], item)
 
 
     #---------------------------------------------------------------------------
@@ -91,9 +118,23 @@ class Database(QtCore.QThread):
         self.signal.emit(Data(CREATE_WINDOW, data))
 
 
+        # Основной цикл обработки сигналов
         while (data := self.pipe.get()).id != TERMINATE:
-            if data.id <= DB_GEOMETRY:
+            self.base.transaction()
+
+            if data.id <= DB_GETFRIENDS:
+                self.select(DB_GETFRIENDS, data.item)
+
+            elif data.id <= DB_MASTERS:
+                self.insert(data.id, data.items)
+
+            elif data.id <= DB_GEOMETRY:
                 self.update(data.id, data.items)
+
+            elif data.id <= DB_DELFRIENDS:
+                self.delete(data.id, data.items)
+
+            self.base.commit()
 
 
     #---------------------------------------------------------------------------

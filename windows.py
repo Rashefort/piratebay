@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
+from collections import OrderedDict
+
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 
+from config import COLOR_VETERANS
+from config import COLOR_RECRUITS
+from config import COLOR_RENAMED
 from config import WINDOWFLAGS
 from config import CAPTCHA_TEXT
 from config import INFORMATION
@@ -20,7 +25,87 @@ class Friends(QtWidgets.QTreeView):
         self.model = QtGui.QStandardItemModel()
         self.model.setHorizontalHeaderLabels(['Друзья'])
         self.root = self.model.invisibleRootItem()
+
         self.setModel(self.model)
+
+
+    #---------------------------------------------------------------------------
+    # Добавить в self.friends (список отображаемых пользователей)
+    #---------------------------------------------------------------------------
+    def __add(self, id, name, loot, color):
+        letter = name[0].upper()
+
+        try:
+            self.friends[letter].append([id, name, loot, color])
+
+        except KeyError:
+            self.friends[letter] = [[id, name, loot, color]]
+
+        finally:
+            self.friends[letter].sort(key=lambda x: x[1])
+            self.users.append([id, name])
+
+
+    #---------------------------------------------------------------------------
+    # Переименовать в self.friends
+    #---------------------------------------------------------------------------
+    def __ren(self, id, name):
+        for letter in self.friends:
+            for i in range(len(self.friends[letter])):
+                if self.friends[letter][i][0] == id:
+                    self.friends[letter][i][1] = name
+                    self.friends[letter][i][3] = COLOR_RENAMED
+                    return
+
+
+    #---------------------------------------------------------------------------
+    # Удалить из self.friends
+    #---------------------------------------------------------------------------
+    def __del(self, id, name):
+        letter = name[0].upper()
+
+        for i in range(len(self.friends[letter])):
+            if self.friends[letter][i][0] == id:
+                del self.friends[letter][i]
+                return
+
+
+
+    #---------------------------------------------------------------------------
+    # "Старые друзья"
+    #---------------------------------------------------------------------------
+    def veterans(self, friends):
+        self.friends = OrderedDict()
+        self.users = list()
+
+        for friend in friends:
+            self.__add(*friend, COLOR_VETERANS)
+
+
+    #---------------------------------------------------------------------------
+    # "Новые друзья"
+    #---------------------------------------------------------------------------
+    def recruits(self, items):
+        veterans = [user[0] for user in self.users]
+        modify = {'add': [], 'ren': [], 'del': []}
+
+        for item in items:
+            name = f'{item["first_name"]} {item["last_name"]}'
+            id = item['id']
+
+            if id not in veterans and 'deactivated' not in item:
+                modify['add'].append([id, name])
+                self.__add(id, name, 0, COLOR_RECRUITS)
+
+            elif id in veterans and [id, name] not in self.users:
+                modify['ren'].append([name, id])
+                self.__ren(id, name)
+
+            elif id in veterans and 'deactivated' in item:
+                modify['del'].append([id])
+                self.__del(id, name)
+
+        return modify
 
 
 #-------------------------------------------------------------------------------
