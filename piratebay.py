@@ -20,7 +20,7 @@ class Pirate(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         QtWidgets.QMainWindow.__init__(self, parent)
         self.buttons = list()       # Кнопки toolbar'а
-        self.total = 0               # Отмеченная "музыка"
+        self.total = 0              # Отмеченная "музыка"
 
         self.vk = self.create_stream(VKontakte, self.handler)
         self.db = self.create_stream(Database, self.handler)
@@ -40,7 +40,7 @@ class Pirate(QtWidgets.QMainWindow):
 
 
     #---------------------------------------------------------------------------
-    # Создать "кнопку" для тулбара и добавить в self.buttons
+    # Создать "кнопку" для тулбара и добавить в список self.buttons
     #---------------------------------------------------------------------------
     def create_button(self, name, info):
         icon = QtGui.QIcon(str(TEMPORARY / f'{name}.png'))
@@ -104,6 +104,9 @@ class Pirate(QtWidgets.QMainWindow):
         toolBar.addAction(self.buttons[-1])
 
         self.friends = Friends()
+        self.friends.clicked.connect(self.single_click)
+        self.friends.doubleClicked.connect(self.double_click)
+
         self.details = Details()
 
         self.splitter = QtWidgets.QSplitter()
@@ -264,6 +267,38 @@ class Pirate(QtWidgets.QMainWindow):
                     self.db['pipe'].put(Data(key, data[key]))
 
             self.friends.show()
+
+
+    #---------------------------------------------------------------------------
+    # Обработчик кликов мышки.
+    #---------------------------------------------------------------------------
+    def single_click(self, index):
+        self.click = [SINGLE_CLICK, index]
+        QtCore.QTimer.singleShot(DOUBLECLICK_INTERVAL, self.accept_click)
+
+
+    def double_click(self, index):
+        self.click = [DOUBLE_CLICK, index]
+
+
+    def accept_click(self):
+        print(self.click[0])
+        print(self.click[1].model().columnCount(), end='\n\n')
+
+        # if (seachest := self.click[1].model().columnCount()) == 1:
+        #     item = self.brotherhood.selectedIndexes()[0]
+        #     id = item.model().itemFromIndex(self.click[1]).id
+
+        #     if id < 0:
+        #         pass
+
+        # elif seachest == 2:
+        #     pass
+
+        # else:
+        #     pass
+
+        # self.click = [None]
 
 
     #---------------------------------------------------------------------------

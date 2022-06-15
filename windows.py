@@ -129,12 +129,16 @@ class Friends(QtWidgets.QTreeView):
     def show(self):
         # Сортировка словаря по ключу
         self.friends = dict(sorted(self.friends.items(), key=lambda x: x[0]))
+        total_friends = 0
 
         # Сортировка по значению (имя) в каждом ключе
         for letter in self.friends.keys():
             self.friends[letter].sort(key=lambda x: x[1])
+            total_friends += len(self.friends[letter])
 
         # Создание списка "друзей"
+        self.model.setHorizontalHeaderLabels([f'Друзья - {total_friends}'])
+
         for letter in self.friends:
             name = f'{letter} - {len(self.friends[letter])}'
             color = COLOR_VETERANS

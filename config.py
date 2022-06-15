@@ -23,47 +23,51 @@ PLAIN       = QtWidgets.QFrame.Plain
 DATABASE    = 'piratebay.db'
 TEMPORARY   = Path(os.environ['TEMP'])
 
-CREATE_WINDOW:       int = 100
+DOUBLECLICK_INTERVAL: int = 250
+SINGLE_CLICK:         int = 1
+DOUBLE_CLICK:         int = 2
 
-VK_AUTHORIZATION:    int = 200
-VK_CAPTCHA:          int = 210
-VK_FAILURE:          int = 220
-VK_FRIENDS:          int = 230
+CREATE_WINDOW:        int = 100
 
-DB_GETFRIENDS:       int = 300
-DB_ADDFRIENDS:       int = 310
-DB_MASTERS:          int = 320
-DB_PASSWORD:         int = 330
-DB_RENFRIENDS:       int = 340
-DB_GEOMETRY:         int = 350
-DB_DELFRIENDS:       int = 360
+VK_AUTHORIZATION:     int = 200
+VK_CAPTCHA:           int = 210
+VK_FAILURE:           int = 220
+VK_FRIENDS:           int = 230
 
-TERMINATE:           int = 999
+DB_GETFRIENDS:        int = 300
+DB_ADDFRIENDS:        int = 310
+DB_MASTERS:           int = 320
+DB_PASSWORD:          int = 330
+DB_RENFRIENDS:        int = 340
+DB_GEOMETRY:          int = 350
+DB_DELFRIENDS:        int = 360
 
-SPLASH_TEXT:         str = 'Загрузка данных...'
-CONNECT_TEXT:        str = 'Подключение к ВК...'
-CAPTCHA_TEXT:        str = 'Введите текст на картинке'
-TAGGED_TEXT:         str = ' Выбрано %d'
-FAILURE_TEXT:        str = 'Связь с VK не установлена'
-NEWPASSWORD_TEXT:    str = 'Данные успешно изменены'
-OLDPASSWORD_TEXT:    str = 'Данные остались прежними'
+TERMINATE:            int = 999
 
-ERROR_EMPTYPASSWORD: str = 'Не задан телефон или пароль'
-ERROR_BADPASSWORD:   str = 'Неверный телефон или пароль'
+SPLASH_TEXT:          str = 'Загрузка данных...'
+CONNECT_TEXT:         str = 'Подключение к ВК...'
+CAPTCHA_TEXT:         str = 'Введите текст на картинке'
+TAGGED_TEXT:          str = ' Выбрано %d'
+FAILURE_TEXT:         str = 'Связь с VK не установлена'
+NEWPASSWORD_TEXT:     str = 'Данные успешно изменены'
+OLDPASSWORD_TEXT:     str = 'Данные остались прежними'
 
-INFO_RELOAD_FRIENDS: str = 'Обновить список друзей'
-INFO_SAVE_SELECTED:  str = 'Сохранить отмеченное'
-INFO_DOWNLOAD_MUSIC: str = 'Скачать выбранные треки'
-INFO_AUTHORIZATION:  str = 'Настройки учетной записи'
-INFO_HELP:           str = 'Помощь'
+ERROR_EMPTYPASSWORD:  str = 'Не задан телефон или пароль'
+ERROR_BADPASSWORD:    str = 'Неверный телефон или пароль'
 
-TRAFFIC_RED:         str = str(TEMPORARY / 'red.png')
-TRAFFIC_YELLOW:      str = str(TEMPORARY / 'yellow.png')
-TRAFFIC_GREEN:       str = str(TEMPORARY / 'green.png')
+INFO_RELOAD_FRIENDS:  str = 'Обновить список друзей'
+INFO_SAVE_SELECTED:   str = 'Сохранить отмеченное'
+INFO_DOWNLOAD_MUSIC:  str = 'Скачать выбранные треки'
+INFO_AUTHORIZATION:   str = 'Настройки учетной записи'
+INFO_HELP:            str = 'Помощь'
 
-COLOR_VETERANS:      str = '#000000'
-COLOR_RECRUITS:      str = '#E65100'
-COLOR_RENAMED:       str = '#AA00FF'
+TRAFFIC_RED:          str = str(TEMPORARY / 'red.png')
+TRAFFIC_YELLOW:       str = str(TEMPORARY / 'yellow.png')
+TRAFFIC_GREEN:        str = str(TEMPORARY / 'green.png')
+
+COLOR_VETERANS:       str = '#000000'
+COLOR_RECRUITS:       str = '#E65100'
+COLOR_RENAMED:        str = '#AA00FF'
 
 
 # Класс для передачи данных между потоками
