@@ -108,6 +108,11 @@ class Pirate(QtWidgets.QMainWindow):
         self.friends.doubleClicked.connect(self.double_click)
 
         self.details = Details()
+        self.details.clicked.connect(self.single_click)
+        self.details.doubleClicked.connect(self.double_click)
+
+        import pdb
+        # pdb.set_trace()
 
         self.splitter = QtWidgets.QSplitter()
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
@@ -282,8 +287,20 @@ class Pirate(QtWidgets.QMainWindow):
 
 
     def accept_click(self):
-        print(self.click[0])
-        print(self.click[1].model().columnCount(), end='\n\n')
+        field = self.click[1].model().columnCount()
+
+        if field == 1:
+            item = self.friends.selectedIndexes()[0]
+            id = item.model().itemFromIndex(self.click[1]).id
+
+            if id > 0:
+                for friend in self.friends.users:
+                    if friend[0] == id:
+                        letter = friend[1][0]
+            else:
+                letter = chr(-id)
+
+            self.details.by_letters(self.friends.team[letter])
 
         # if (seachest := self.click[1].model().columnCount()) == 1:
         #     item = self.brotherhood.selectedIndexes()[0]

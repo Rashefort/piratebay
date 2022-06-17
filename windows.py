@@ -18,9 +18,9 @@ from config import WARNING
 
 
 #-------------------------------------------------------------------------------
-# "Друг" (или "буква") списка "друзей"
+# Один "пункт" QStandardItem
 #-------------------------------------------------------------------------------
-class Amigo(QtGui.QStandardItem):
+class Item(QtGui.QStandardItem):
      def __init__(self, id, name, color):
         QtGui.QStandardItem.__init__(self)
 
@@ -42,7 +42,6 @@ class Friends(QtWidgets.QTreeView):
         self.model = QtGui.QStandardItemModel()
         self.model.setHorizontalHeaderLabels(['Друзья'])
         self.root = self.model.invisibleRootItem()
-
         self.setModel(self.model)
 
 
@@ -53,24 +52,24 @@ class Friends(QtWidgets.QTreeView):
         letter = name[0].upper()
 
         try:
-            self.friends[letter].append([id, name, loot, color])
+            self.team[letter].append([id, name, loot, color])
 
         except KeyError:
-            self.friends[letter] = [[id, name, loot, color]]
+            self.team[letter] = [[id, name, loot, color]]
 
         finally:
             self.users.append([id, name])
 
 
     #---------------------------------------------------------------------------
-    # Переименовать в self.friends
+    # Переименовать в self.team
     #---------------------------------------------------------------------------
     def __ren(self, id, name):
-        for letter in self.friends:
-            for i in range(len(self.friends[letter])):
-                if self.friends[letter][i][0] == id:
-                    self.friends[letter][i][1] = name
-                    self.friends[letter][i][3] = COLOR_RENAMED
+        for letter in self.team:
+            for i in range(len(self.team[letter])):
+                if self.team[letter][i][0] == id:
+                    self.team[letter][i][1] = name
+                    self.team[letter][i][3] = COLOR_RENAMED
                     return
 
 
@@ -80,9 +79,9 @@ class Friends(QtWidgets.QTreeView):
     def __del(self, id, name):
         letter = name[0].upper()
 
-        for i in range(len(self.friends[letter])):
-            if self.friends[letter][i][0] == id:
-                del self.friends[letter][i]
+        for i in range(len(self.team[letter])):
+            if self.team[letter][i][0] == id:
+                del self.team[letter][i]
                 return
 
 
@@ -90,7 +89,7 @@ class Friends(QtWidgets.QTreeView):
     # "Старые друзья"
     #---------------------------------------------------------------------------
     def veterans(self, friends):
-        self.friends = dict()
+        self.team = dict()
         self.users = list()
 
         for friend in friends:
@@ -109,8 +108,8 @@ class Friends(QtWidgets.QTreeView):
             id = item['id']
 
             if id not in veterans and 'deactivated' not in item:
-                modify[DB_ADDFRIENDS].append([id, name, 0, master])
-                self.__add(id, name, 0, COLOR_RECRUITS)
+                modify[DB_ADDFRIENDS].append([id, name, None, master])
+                self.__add(id, name, None, COLOR_RECRUITS)
 
             elif id in veterans and [id, name] not in self.users:
                 modify[DB_RENFRIENDS].append([name, id])
@@ -128,45 +127,65 @@ class Friends(QtWidgets.QTreeView):
     #---------------------------------------------------------------------------
     def show(self):
         # Сортировка словаря по ключу
-        self.friends = dict(sorted(self.friends.items(), key=lambda x: x[0]))
+        self.team = dict(sorted(self.team.items(), key=lambda x: x[0]))
         total_friends = 0
 
         # Сортировка по значению (имя) в каждом ключе
-        for letter in self.friends.keys():
-            self.friends[letter].sort(key=lambda x: x[1])
-            total_friends += len(self.friends[letter])
+        for letter in self.team.keys():
+            self.team[letter].sort(key=lambda x: x[1])
+            total_friends += len(self.team[letter])
 
         # Создание списка "друзей"
         self.model.setHorizontalHeaderLabels([f'Друзья - {total_friends}'])
 
-        for letter in self.friends:
-            name = f'{letter} - {len(self.friends[letter])}'
+        for letter in self.team:
+            name = f'{letter} - {len(self.team[letter])}'
             color = COLOR_VETERANS
 
-            if any([i[3] == COLOR_RENAMED for i in self.friends[letter]]):
+            if any([i[3] == COLOR_RENAMED for i in self.team[letter]]):
                 color = COLOR_RENAMED
 
-            if any([i[3] == COLOR_RECRUITS for i in self.friends[letter]]):
+            if any([i[3] == COLOR_RECRUITS for i in self.team[letter]]):
                 color = COLOR_RECRUITS
 
-            parent = Amigo(None, name, color)
+            parent = Item(None, name, color)
             self.root.appendRow(parent)
 
-            for friend in self.friends[letter]:
-                item = Amigo(friend[0], friend[1], friend[3])
+            for friend in self.team[letter]:
+                item = Item(friend[0], friend[1], friend[3])
                 parent.appendRow(item)
 
 
 #-------------------------------------------------------------------------------
 # Правая панель в главном окне
 #-------------------------------------------------------------------------------
-class Details(QtWidgets.QTreeView):
+class Details(QtWidgets.QTableView):
     def __init__(self):
-        QtWidgets.QTreeView.__init__(self)
+        QtWidgets.QTableView.__init__(self)
         self.model = QtGui.QStandardItemModel()
-        self.model.setHorizontalHeaderLabels(['Детали'])
-        self.root = self.model.invisibleRootItem()
         self.setModel(self.model)
+
+
+    #---------------------------------------------------------------------------
+    # Список "друзей" на выбранную букву
+    #---------------------------------------------------------------------------
+    def by_letters(self, data):
+        self.model.clear()
+        self.model.setRowCount(len(data))
+        self.model.setColumnCount(2)
+        self.model.setHorizontalHeaderLabels(['Друг', 'Музыка'])
+
+        for i in range(0, len(data)):
+            item = Item(data[i][0], data[i][1], data[i][3])
+            self.model.setItem(i, 0, item)
+
+            loot = str(data[i][2]) if data[i][2] else 'хз'
+            item = Item(data[i][0], loot, data[i][3])
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.model.setItem(i, 1, item)
+
+        self.setModel(self.model)
+        self.resizeColumnsToContents()
 
 
 #-------------------------------------------------------------------------------
