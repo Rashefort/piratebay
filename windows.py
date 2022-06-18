@@ -14,7 +14,8 @@ from config import WINDOWFLAGS
 from config import INFORMATION
 from config import CRITICAL
 from config import WARNING
-
+from config import STRETCH
+from config import RESIZE
 
 
 #-------------------------------------------------------------------------------
@@ -185,7 +186,10 @@ class Details(QtWidgets.QTableView):
             self.model.setItem(i, 1, item)
 
         self.setModel(self.model)
-        self.resizeColumnsToContents()
+
+        self.header = self.horizontalHeader()
+        self.header.setSectionResizeMode(0, STRETCH)
+        self.header.setSectionResizeMode(1, RESIZE)
 
 
 #-------------------------------------------------------------------------------

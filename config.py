@@ -19,6 +19,9 @@ EXPANDING   = QtWidgets.QSizePolicy.Expanding
 PREFERRED   = QtWidgets.QSizePolicy.Preferred
 STYLEDPANEL = QtWidgets.QFrame.StyledPanel
 PLAIN       = QtWidgets.QFrame.Plain
+STRETCH     = QtWidgets.QHeaderView.Stretch
+RESIZE      = QtWidgets.QHeaderView.ResizeToContents
+
 
 DATABASE    = 'piratebay.db'
 TEMPORARY   = Path(os.environ['TEMP'])
@@ -47,10 +50,10 @@ TERMINATE:            int = 999
 SPLASH_TEXT:          str = 'Загрузка данных...'
 CONNECT_TEXT:         str = 'Подключение к ВК...'
 CAPTCHA_TEXT:         str = 'Введите текст на картинке'
-TAGGED_TEXT:          str = ' Выбрано %d'
 FAILURE_TEXT:         str = 'Связь с VK не установлена'
 NEWPASSWORD_TEXT:     str = 'Данные успешно изменены'
 OLDPASSWORD_TEXT:     str = 'Данные остались прежними'
+MASTER_TEXT:          str = 'Пользователь'
 
 ERROR_EMPTYPASSWORD:  str = 'Не задан телефон или пароль'
 ERROR_BADPASSWORD:    str = 'Неверный телефон или пароль'

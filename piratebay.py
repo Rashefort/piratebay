@@ -19,11 +19,9 @@ from config import *
 class Pirate(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         QtWidgets.QMainWindow.__init__(self, parent)
-        self.buttons = list()       # Кнопки toolbar'а
-        self.total = 0              # Отмеченная "музыка"
-
         self.vk = self.create_stream(VKontakte, self.handler)
         self.db = self.create_stream(Database, self.handler)
+        self.buttons = list() # Кнопки toolbar'а
 
 
     #---------------------------------------------------------------------------
@@ -68,9 +66,9 @@ class Pirate(QtWidgets.QMainWindow):
     # "Светофор" в статусбаре
     #---------------------------------------------------------------------------
     def traffic_light(self, light, text):
-        self.current_light = light
+        self.master_light = light
         self.light.setPixmap(QtGui.QPixmap(light))
-        self.status.setText(text)
+        self.master.setText(text)
 
 
     #---------------------------------------------------------------------------
@@ -111,9 +109,6 @@ class Pirate(QtWidgets.QMainWindow):
         self.details.clicked.connect(self.single_click)
         self.details.doubleClicked.connect(self.double_click)
 
-        import pdb
-        # pdb.set_trace()
-
         self.splitter = QtWidgets.QSplitter()
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.addWidget(self.friends)
@@ -135,20 +130,17 @@ class Pirate(QtWidgets.QMainWindow):
 
         self.statusBar = self.statusBar()
         self.statusBar.setSizeGripEnabled(False)
+        self.statusBar.setStyleSheet('QStatusBar::item {border: None;}')
 
+        self.status = QtWidgets.QLabel(self)
         self.light = QtWidgets.QLabel(self)
         self.light.setPixmap(QtGui.QPixmap(TRAFFIC_RED))
-        self.statusBar.addWidget(self.light)
+        self.light.setMinimumSize(16, 16)
+        self.master = QtWidgets.QLabel(MASTER_TEXT)
 
-        self.status = QtWidgets.QLabel(CONNECT_TEXT)
-        self.status.setMinimumSize(50, 20)
-        self.status.setFrameStyle(STYLEDPANEL | PLAIN)
         self.statusBar.addWidget(self.status, stretch=1)
-
-        self.loot = QtWidgets.QLabel(TAGGED_TEXT % self.total)
-        self.loot.setMinimumSize(50, 20)
-        self.loot.setFrameStyle(STYLEDPANEL | PLAIN)
-        self.statusBar.addPermanentWidget(self.loot)
+        self.statusBar.addPermanentWidget(self.master)
+        self.statusBar.addPermanentWidget(self.light)
 
         self.addToolBar(QtCore.Qt.TopToolBarArea, toolBar)
 
@@ -157,8 +149,8 @@ class Pirate(QtWidgets.QMainWindow):
     # Ввод телефона и пароля
     #---------------------------------------------------------------------------
     def credentials(self):
-        status_light = self.current_light
-        status_text = self.status.text()
+        master_light = self.master_light
+        master_text = self.master.text()
         phone = self.vk_phone
         password = self.vk_password
 
@@ -174,12 +166,12 @@ class Pirate(QtWidgets.QMainWindow):
 
         if not phone or not password:
             Message(CRITICAL, ERROR_EMPTYPASSWORD, parent=self)
-            self.traffic_light(status_light, status_text)
+            self.traffic_light(master_light, master_text)
             self.switch_toolbar(disable=False)
 
         elif [phone, password] == [self.vk_phone, self.vk_password]:
             Message(WARNING, OLDPASSWORD_TEXT, parent=self)
-            self.traffic_light(status_light, status_text)
+            self.traffic_light(master_light, master_text)
             self.switch_toolbar(disable=False)
 
         else:
@@ -278,6 +270,10 @@ class Pirate(QtWidgets.QMainWindow):
     # Обработчик кликов мышки.
     #---------------------------------------------------------------------------
     def single_click(self, index):
+        if index.model().columnCount() == 2:
+            row = self.details.currentIndex().row()
+            self.details.selectRow(row)
+
         self.click = [SINGLE_CLICK, index]
         QtCore.QTimer.singleShot(DOUBLECLICK_INTERVAL, self.accept_click)
 
@@ -288,6 +284,7 @@ class Pirate(QtWidgets.QMainWindow):
 
     def accept_click(self):
         field = self.click[1].model().columnCount()
+        print(field)
 
         if field == 1:
             item = self.friends.selectedIndexes()[0]
@@ -302,20 +299,9 @@ class Pirate(QtWidgets.QMainWindow):
 
             self.details.by_letters(self.friends.team[letter])
 
-        # if (seachest := self.click[1].model().columnCount()) == 1:
-        #     item = self.brotherhood.selectedIndexes()[0]
-        #     id = item.model().itemFromIndex(self.click[1]).id
-
-        #     if id < 0:
-        #         pass
-
-        # elif seachest == 2:
-        #     pass
-
-        # else:
-        #     pass
-
-        # self.click = [None]
+        # elif field == 2:
+        #     row = self.details.currentIndex().row()
+        #     self.details.selectRow(row)
 
 
     #---------------------------------------------------------------------------
