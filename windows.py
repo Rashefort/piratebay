@@ -6,10 +6,17 @@ from PyQt5 import QtGui
 from config import COLOR_VETERANS
 from config import COLOR_RECRUITS
 from config import COLOR_RENAMED
+from config import FRIENDS_LABEL
+from config import LETTERS_LABEL
+from config import SONGS_LABEL
+from config import DB_FRIENDS
 from config import DB_ADDFRIENDS
 from config import DB_RENFRIENDS
 from config import DB_DELFRIENDS
 from config import CAPTCHA_TEXT
+from config import NOSELECTION
+from config import SELECTROWS
+from config import SELECTION
 from config import WINDOWFLAGS
 from config import INFORMATION
 from config import CRITICAL
@@ -18,20 +25,34 @@ from config import STRETCH
 from config import RESIZE
 
 
+
 #-------------------------------------------------------------------------------
 # Один "пункт" QStandardItem
 #-------------------------------------------------------------------------------
 class Item(QtGui.QStandardItem):
-     def __init__(self, id, name, color):
+     def __init__(self, id, name, loot=None, color=COLOR_VETERANS):
         QtGui.QStandardItem.__init__(self)
 
         # Для "буквы" списка id вычисляется, как -1 * ord(буква)
         self.id = id if id else -ord(name[0])
         self.name = name
+        self.loot = loot
 
         self.setForeground(QtGui.QBrush(QtGui.QColor(color)))
         self.setEditable(False)
         self.setText(self.name)
+
+
+#-------------------------------------------------------------------------------
+# Один "пункт" QStandardItem
+#-------------------------------------------------------------------------------
+class Song(QtGui.QStandardItem):
+    def __init__(self, name, checkable=False, color=COLOR_VETERANS):
+        QtGui.QStandardItem.__init__(self)
+        self.setForeground(QtGui.QBrush(QtGui.QColor(color)))
+        self.setCheckable(checkable)
+        self.setEditable(False)
+        self.setText(name)
 
 
 #-------------------------------------------------------------------------------
@@ -41,13 +62,12 @@ class Friends(QtWidgets.QTreeView):
     def __init__(self):
         QtWidgets.QTreeView.__init__(self)
         self.model = QtGui.QStandardItemModel()
-        self.model.setHorizontalHeaderLabels(['Друзья'])
         self.root = self.model.invisibleRootItem()
         self.setModel(self.model)
 
 
     #---------------------------------------------------------------------------
-    # Добавить в self.friends (список отображаемых пользователей)
+    # Добавить в self.team (список отображаемых пользователей)
     #---------------------------------------------------------------------------
     def __add(self, id, name, loot, color):
         letter = name[0].upper()
@@ -75,7 +95,7 @@ class Friends(QtWidgets.QTreeView):
 
 
     #---------------------------------------------------------------------------
-    # Удалить из self.friends
+    # Удалить из self.team
     #---------------------------------------------------------------------------
     def __del(self, id, name):
         letter = name[0].upper()
@@ -120,11 +140,13 @@ class Friends(QtWidgets.QTreeView):
                 modify[DB_DELFRIENDS].append([id])
                 self.__del(id, name)
 
+        modify.update({DB_FRIENDS: [[i[0]] for i in modify[DB_ADDFRIENDS]]})
+
         return modify
 
 
     #---------------------------------------------------------------------------
-    # "Новые друзья"
+    # "Друзья"
     #---------------------------------------------------------------------------
     def show(self):
         # Сортировка словаря по ключу
@@ -137,7 +159,7 @@ class Friends(QtWidgets.QTreeView):
             total_friends += len(self.team[letter])
 
         # Создание списка "друзей"
-        self.model.setHorizontalHeaderLabels([f'Друзья - {total_friends}'])
+        self.model.setHorizontalHeaderLabels([FRIENDS_LABEL % total_friends])
 
         for letter in self.team:
             name = f'{letter} - {len(self.team[letter])}'
@@ -149,11 +171,11 @@ class Friends(QtWidgets.QTreeView):
             if any([i[3] == COLOR_RECRUITS for i in self.team[letter]]):
                 color = COLOR_RECRUITS
 
-            parent = Item(None, name, color)
+            parent = Item(None, name, None, color)
             self.root.appendRow(parent)
 
             for friend in self.team[letter]:
-                item = Item(friend[0], friend[1], friend[3])
+                item = Item(*friend)
                 parent.appendRow(item)
 
 
@@ -164,24 +186,26 @@ class Details(QtWidgets.QTableView):
     def __init__(self):
         QtWidgets.QTableView.__init__(self)
         self.model = QtGui.QStandardItemModel()
+        self.setSelectionBehavior(SELECTROWS)
         self.setModel(self.model)
 
 
     #---------------------------------------------------------------------------
     # Список "друзей" на выбранную букву
     #---------------------------------------------------------------------------
-    def by_letters(self, data):
+    def letters(self, data):
         self.model.clear()
         self.model.setRowCount(len(data))
         self.model.setColumnCount(2)
-        self.model.setHorizontalHeaderLabels(['Друг', 'Музыка'])
+        self.model.setHorizontalHeaderLabels(LETTERS_LABEL)
+        self.setSelectionMode(SELECTION)
 
         for i in range(0, len(data)):
-            item = Item(data[i][0], data[i][1], data[i][3])
+            item = Item(*data[i])
             self.model.setItem(i, 0, item)
 
-            loot = str(data[i][2]) if data[i][2] else 'хз'
-            item = Item(data[i][0], loot, data[i][3])
+            name = str(data[i][2]) if data[i][2] else 'хз'
+            item = Item(data[i][0], name)
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             self.model.setItem(i, 1, item)
 
@@ -190,6 +214,33 @@ class Details(QtWidgets.QTableView):
         self.header = self.horizontalHeader()
         self.header.setSectionResizeMode(0, STRETCH)
         self.header.setSectionResizeMode(1, RESIZE)
+
+
+    #---------------------------------------------------------------------------
+    # Аудио список "друга"
+    #---------------------------------------------------------------------------
+    def songs(self, data):
+        self.model.clear()
+        self.model.setRowCount(len(data))
+        self.model.setColumnCount(3)
+        self.model.setHorizontalHeaderLabels(SONGS_LABEL)
+        self.setSelectionMode(NOSELECTION)
+
+        for i in range(0, len(data)):
+            for j in range(0, 2):
+                item = Song(data[i][j], checkable=not j)
+                self.model.setItem(i, j, item)
+
+            item = Song(data[i][2])
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.model.setItem(i, 2, item)
+
+        self.setModel(self.model)
+
+        self.header = self.horizontalHeader()
+        self.header.setSectionResizeMode(0, RESIZE)
+        self.header.setSectionResizeMode(1, STRETCH)
+        self.header.setSectionResizeMode(2, RESIZE)
 
 
 #-------------------------------------------------------------------------------
@@ -204,10 +255,29 @@ class Message(QtWidgets.QMessageBox):
 
     def __init__(self, icon, text, parent=None):
         QtWidgets.QMessageBox.__init__(self, parent)
-        self.setIcon(icon)
         self.setWindowTitle(Message.title[icon])
+        self.setIcon(icon)
         self.setText(text)
         self.exec()
+
+
+#-------------------------------------------------------------------------------
+# Окно вопроса
+#-------------------------------------------------------------------------------
+class Question(QtWidgets.QMessageBox):
+    def __init__(self, text, parent=None):
+        QtWidgets.QMessageBox.__init__(self, parent)
+        self.setIcon(QtWidgets.QMessageBox.Question)
+        self.addButton(QtWidgets.QMessageBox.Yes)
+        self.addButton(QtWidgets.QMessageBox.No)
+        self.setDefaultButton(QtWidgets.QMessageBox.No)
+        self.setWindowTitle('Вопрос')
+        self.setText(text)
+
+
+    #---------------------------------------------------------------------------
+    def ask(self):
+        return self.exec() == QtWidgets.QMessageBox.Yes
 
 
 #-------------------------------------------------------------------------------

@@ -21,7 +21,7 @@ class Pirate(QtWidgets.QMainWindow):
         QtWidgets.QMainWindow.__init__(self, parent)
         self.vk = self.create_stream(VKontakte, self.handler)
         self.db = self.create_stream(Database, self.handler)
-        self.buttons = list() # Кнопки toolbar'а
+        self.selected = None
 
 
     #---------------------------------------------------------------------------
@@ -38,28 +38,17 @@ class Pirate(QtWidgets.QMainWindow):
 
 
     #---------------------------------------------------------------------------
-    # Создать "кнопку" для тулбара и добавить в список self.buttons
+    # Создать "кнопку" для тулбара
     #---------------------------------------------------------------------------
     def create_button(self, name, info):
         icon = QtGui.QIcon(str(TEMPORARY / f'{name}.png'))
 
-        tbIcon = QtWidgets.QAction(self)
-        tbIcon.setIcon(QtGui.QIcon(icon))
-        tbIcon.hovered.connect(
+        button = QtWidgets.QAction(self)
+        button.setIcon(QtGui.QIcon(icon))
+        button.hovered.connect(
             lambda info=info: self.statusBar.showMessage(info, 1500))
 
-        self.buttons.append(tbIcon)
-
-        return tbIcon
-
-
-    #---------------------------------------------------------------------------
-    # Активация/Деактивация кнопок тулбара
-    #---------------------------------------------------------------------------
-    def switch_toolbar(self, disable=True):
-        self.setCursor(WAITCURSOR if disable else ARROWCURSOR)
-        for button in self.buttons:
-            button.setDisabled(disable)
+        return button
 
 
     #---------------------------------------------------------------------------
@@ -84,22 +73,26 @@ class Pirate(QtWidgets.QMainWindow):
         toolBar = QtWidgets.QToolBar('Pirate ToolBar')
         toolBar.setMovable(False)
 
-        tbTeam = self.create_button('team', INFO_RELOAD_FRIENDS)
-        tbSave = self.create_button('chest', INFO_SAVE_SELECTED)
-        tbPump = self.create_button('sword', INFO_DOWNLOAD_MUSIC)
+        # self.tbTeam = self.create_button('team', INFO_RELOAD_FRIENDS)
+        # toolBar.addAction(button)
 
-        tbInfo = self.create_button('skipper', INFO_AUTHORIZATION)
-        tbInfo.triggered.connect(self.credentials)
+        self.tbCheck = self.create_button('chest', INFO_CHECK_SELECTED)
+        self.tbCheck.triggered.connect(self.audiorecords)
+        self.tbCheck.setEnabled(False)
+        toolBar.addAction(self.tbCheck)
 
-        tbHelp = self.create_button('hook', INFO_HELP)
+        # self.tbPump = self.create_button('sword', INFO_DOWNLOAD_MUSIC)
 
-        for button in self.buttons[:-1]:
-            toolBar.addAction(button)
+        self.tbInfo = self.create_button('skipper', INFO_AUTHORIZATION)
+        self.tbInfo.triggered.connect(self.credentials)
+        toolBar.addAction(self.tbInfo)
 
         spacer = QtWidgets.QWidget(self)
         spacer.setSizePolicy(QtWidgets.QSizePolicy(EXPANDING, PREFERRED))
         toolBar.addWidget(spacer)
-        toolBar.addAction(self.buttons[-1])
+
+        self.tbHelp = self.create_button('hook', INFO_HELP)
+        toolBar.addAction(self.tbHelp)
 
         self.friends = Friends()
         self.friends.clicked.connect(self.single_click)
@@ -146,6 +139,16 @@ class Pirate(QtWidgets.QMainWindow):
 
 
     #---------------------------------------------------------------------------
+    # Проверить аудиозаписи "друга"
+    #---------------------------------------------------------------------------
+    def audiorecords(self):
+        if Question(CHECKAUDIO_TEXT, self).ask():
+            QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+            self.vk['pipe'].put(Data(VK_AUDIO, [self.selected]))
+            self.setEnabled(False)
+
+
+    #---------------------------------------------------------------------------
     # Ввод телефона и пароля
     #---------------------------------------------------------------------------
     def credentials(self):
@@ -154,7 +157,6 @@ class Pirate(QtWidgets.QMainWindow):
         phone = self.vk_phone
         password = self.vk_password
 
-        self.switch_toolbar(disable=True)
         self.traffic_light(TRAFFIC_YELLOW, CONNECT_TEXT)
 
         window = Account(self.vk_phone, self.vk_password, self)
@@ -167,12 +169,10 @@ class Pirate(QtWidgets.QMainWindow):
         if not phone or not password:
             Message(CRITICAL, ERROR_EMPTYPASSWORD, parent=self)
             self.traffic_light(master_light, master_text)
-            self.switch_toolbar(disable=False)
 
         elif [phone, password] == [self.vk_phone, self.vk_password]:
             Message(WARNING, OLDPASSWORD_TEXT, parent=self)
             self.traffic_light(master_light, master_text)
-            self.switch_toolbar(disable=False)
 
         else:
             Message(WARNING, NEWPASSWORD_TEXT, parent=self)
@@ -232,7 +232,6 @@ class Pirate(QtWidgets.QMainWindow):
             self.db['pipe'].put(Data(DB_GETFRIENDS, [[self.vk_id]]))
 
             self.traffic_light(TRAFFIC_GREEN, self.vk_name)
-            self.switch_toolbar(disable=False)
 
 
         # В data.items - [vk_api.exceptions.Captcha]
@@ -246,7 +245,13 @@ class Pirate(QtWidgets.QMainWindow):
         elif data.id == VK_FAILURE:
             Message(CRITICAL, data.item, parent=self)
             self.traffic_light(TRAFFIC_RED, FAILURE_TEXT)
-            self.switch_toolbar(disable=False)
+
+
+        # В data.items - ["текст ошибки"]
+        elif data.id == VK_DENIED:
+            QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.ArrowCursor)
+            Message(CRITICAL, data.item, parent=self)
+            self.setEnabled(True)
 
 
         # В data.items - [[id, name, loot], ...]
@@ -263,17 +268,39 @@ class Pirate(QtWidgets.QMainWindow):
                 if data[key]:
                     self.db['pipe'].put(Data(key, data[key]))
 
-            self.friends.show()
+            if not self.friends.team:
+                Message(CRITICAL, NOFRIENDS_TEXT, parent=self)
+            else:
+                self.friends.show()
+
+
+        # В data.items - [{id, first_name, last_name, ...}, ...]
+        elif data.id == DB_GETLOOT:
+            print(data.items)
+
+
+        # В data.items - []
+        elif data.id == VK_AUDIO:
+            QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.ArrowCursor)
+
+            songs = []
+            for item in data.items:
+                songs.append([
+                    item['artist'],
+                    item['title'],
+                    str(item['duration']),
+                    item['url'],
+                    str(item['owner_id']),
+                ])
+
+            self.details.songs(songs)
+            self.setEnabled(True)
 
 
     #---------------------------------------------------------------------------
     # Обработчик кликов мышки.
     #---------------------------------------------------------------------------
     def single_click(self, index):
-        if index.model().columnCount() == 2:
-            row = self.details.currentIndex().row()
-            self.details.selectRow(row)
-
         self.click = [SINGLE_CLICK, index]
         QtCore.QTimer.singleShot(DOUBLECLICK_INTERVAL, self.accept_click)
 
@@ -283,25 +310,36 @@ class Pirate(QtWidgets.QMainWindow):
 
 
     def accept_click(self):
-        field = self.click[1].model().columnCount()
-        print(field)
+        # По количеству столбцов определяем в каком виджете был click
+        columns = self.click[1].model().columnCount()
+        widget = self.friends if columns == 1 else self.details
 
-        if field == 1:
-            item = self.friends.selectedIndexes()[0]
-            id = item.model().itemFromIndex(self.click[1]).id
+        if widget.selectionModel().hasSelection():
+            item = widget.selectedIndexes()[0]
+            data = item.model().itemFromIndex(self.click[1])
 
-            if id > 0:
-                for friend in self.friends.users:
-                    if friend[0] == id:
-                        letter = friend[1][0]
+            self.tbCheck.setEnabled(data.id > 0)
+            self.selected = data.id
+
+            if self.click[0] == SINGLE_CLICK:
+                if columns == 1:
+                    letter = self.friends.team[data.name[0].upper()]
+                    self.details.letters(letter)
+
+                elif columns == 2:
+                    row = self.details.currentIndex().row()
+                    self.details.selectRow(row)
+
             else:
-                letter = chr(-id)
+                if data.id > 0: # Переписать этот блок
+                    if data.loot and data.loot > 0:
+                        self.db['pipe'].put(Data(DB_GETLOOT, [data.id]))
 
-            self.details.by_letters(self.friends.team[letter])
+                    elif data.loot == '':
+                        Message(WARNING, NODATABASE_TEXT, parent=self)
 
-        # elif field == 2:
-        #     row = self.details.currentIndex().row()
-        #     self.details.selectRow(row)
+                    else:
+                        Message(WARNING, NOMUSIC_TEXT, parent=self)
 
 
     #---------------------------------------------------------------------------

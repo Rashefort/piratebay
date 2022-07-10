@@ -9,8 +9,8 @@ if __name__ == '__main__':
         cursor = connection.cursor()
 
 
-        cursor.execute("CREATE TABLE Text (title TEXT, phone TEXT, password TEXT)")
-        cursor.execute("INSERT INTO Text VALUES (?, ?, ?)", ('На абордаж!', '', ''))
+        cursor.execute("CREATE TABLE Strings (title TEXT, phone TEXT, password TEXT)")
+        cursor.execute("INSERT INTO Strings VALUES (?, ?, ?)", ('На абордаж!', '', ''))
 
 
         cursor.execute("CREATE TABLE Window (geometry BLOB, splitter BLOB)")
@@ -30,10 +30,21 @@ if __name__ == '__main__':
 
         cursor.execute("CREATE TABLE Masters (id INTEGER PRIMARY KEY)")
 
+
         cursor.execute("""
-            CREATE TABLE Friends(id INTEGER, name TEXT, loot INTEGER, master INTEGER,
+            CREATE TABLE Teams (id INTEGER, name TEXT, loot INTEGER, master INTEGER,
             FOREIGN KEY(master) REFERENCES Masters(id))
         """)
+
+
+        cursor.execute("CREATE TABLE Friends (id INTEGER PRIMARY KEY)")
+
+
+        cursor.execute("""
+            CREATE TABLE Audios (artist TEXT, title TEXT, duration INTEGER, url TEXT, friend INTEGER,
+            FOREIGN KEY(friend) REFERENCES Friends(id))
+        """)
+
 
         connection.commit()
         connection.close()

@@ -10,9 +10,12 @@ from config import DB_GETFRIENDS
 from config import DB_ADDFRIENDS
 from config import DB_RENFRIENDS
 from config import DB_DELFRIENDS
-from config import DB_MASTERS
 from config import DB_PASSWORD
 from config import DB_GEOMETRY
+from config import DB_ADDSONG
+from config import DB_GETLOOT
+from config import DB_MASTERS
+from config import DB_FRIENDS
 from config import TERMINATE
 from config import Data
 
@@ -24,11 +27,14 @@ class Database(QtCore.QThread):
     signal = QtCore.pyqtSignal(Data)
 
     SQL = {
-        DB_GETFRIENDS: 'SELECT id, name, loot FROM Friends WHERE master=?',
-        DB_ADDFRIENDS: 'INSERT OR IGNORE INTO Friends VALUES (?, ?, ?, ?)',
+        DB_GETFRIENDS: 'SELECT id, name, loot FROM Teams WHERE master=?',
+        DB_GETLOOT:    'SELECT * FROM Audio WHERE id=?',
         DB_MASTERS:    'INSERT OR IGNORE INTO Masters VALUES(?)',
-        DB_RENFRIENDS: 'UPDATE Friends SET name=? WHERE id=?',
-        DB_PASSWORD:   'UPDATE Text SET phone=?, password=?',
+        DB_FRIENDS:    'INSERT OR IGNORE INTO Friends VALUES(?)',
+        DB_ADDSONG:    'INSERT OR IGNORE INTO Audios VALUES(?, ?, ?, ?, ?)',
+        DB_ADDFRIENDS: 'INSERT OR IGNORE INTO Teams VALUES (?, ?, ?, ?)',
+        DB_RENFRIENDS: 'UPDATE Teams SET name=? WHERE id=?',
+        DB_PASSWORD:   'UPDATE Strings SET phone=?, password=?',
         DB_GEOMETRY:   'UPDATE Window SET geometry=?, splitter=?',
         DB_DELFRIENDS: 'DELETE FROM Friends WHERE id=?',
     }
@@ -94,7 +100,7 @@ class Database(QtCore.QThread):
 
         # Пароли и геометрия в data
         data = []
-        for table in ['Window', 'Text']:
+        for table in ['Window', 'Strings']:
             self.query.prepare(f'SELECT * FROM {table}')
             self.query.exec_()
             data += self.__prepare()[0]
@@ -107,7 +113,7 @@ class Database(QtCore.QThread):
         while (data := self.pipe.get()).id != TERMINATE:
             self.base.transaction()
 
-            if data.id <= DB_GETFRIENDS:
+            if data.id <= DB_GETLOOT:
                 self.select(data.id, data.item)
 
             else:

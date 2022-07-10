@@ -9,8 +9,9 @@ from PyQt5 import QtCore
 
 
 WINDOWFLAGS = QtCore.Qt.Window | QtCore.Qt.MSWindowsFixedSizeDialogHint
-WAITCURSOR  = QtCore.Qt.WaitCursor
-ARROWCURSOR = QtCore.Qt.ArrowCursor
+SELECTION   = QtWidgets.QAbstractItemView.ExtendedSelection
+NOSELECTION = QtWidgets.QAbstractItemView.NoSelection
+SELECTROWS  = QtWidgets.QAbstractItemView.SelectRows
 INFORMATION = QtWidgets.QMessageBox.Information
 CRITICAL    = QtWidgets.QMessageBox.Critical
 WARNING     = QtWidgets.QMessageBox.Warning
@@ -36,30 +37,44 @@ VK_AUTHORIZATION:     int = 200
 VK_CAPTCHA:           int = 210
 VK_FAILURE:           int = 220
 VK_FRIENDS:           int = 230
+VK_DENIED:            int = 240
+VK_AUDIO:             int = 250
 
 DB_GETFRIENDS:        int = 300
-DB_ADDFRIENDS:        int = 310
-DB_MASTERS:           int = 320
-DB_PASSWORD:          int = 330
-DB_RENFRIENDS:        int = 340
-DB_GEOMETRY:          int = 350
-DB_DELFRIENDS:        int = 360
+DB_GETLOOT:           int = 310
+DB_ADDFRIENDS:        int = 320
+DB_MASTERS:           int = 330
+DB_FRIENDS:           int = 340
+DB_ADDSONG:           int = 350
+DB_PASSWORD:          int = 360
+DB_RENFRIENDS:        int = 370
+DB_GEOMETRY:          int = 380
+DB_DELFRIENDS:        int = 390
 
 TERMINATE:            int = 999
 
+MASTER_TEXT:          str = 'Пользователь'
 SPLASH_TEXT:          str = 'Загрузка данных...'
 CONNECT_TEXT:         str = 'Подключение к ВК...'
 CAPTCHA_TEXT:         str = 'Введите текст на картинке'
 FAILURE_TEXT:         str = 'Связь с VK не установлена'
 NEWPASSWORD_TEXT:     str = 'Данные успешно изменены'
 OLDPASSWORD_TEXT:     str = 'Данные остались прежними'
-MASTER_TEXT:          str = 'Пользователь'
+NODATABASE_TEXT:      str = 'Нет в базе данных'
+NOFRIENDS_TEXT:       str = 'У вас нет друзей.'
+NOMUSIC_TEXT:         str = 'У пользователя нет аудизоаписей'
+CHECKAUDIO_TEXT:      str = 'Это может занять несколько минут.\nПродолжить?'
+
+FRIENDS_LABEL:        str  = 'Друзья - %d'
+LETTERS_LABEL:        list = ['Друг', 'Музыка']
+SONGS_LABEL:          list = ['Исполнитель', 'Композиция', 'Время']
 
 ERROR_EMPTYPASSWORD:  str = 'Не задан телефон или пароль'
 ERROR_BADPASSWORD:    str = 'Неверный телефон или пароль'
+ERROR_ACCESSDENIED:   str = 'Доступ к музыке закрыт'
 
 INFO_RELOAD_FRIENDS:  str = 'Обновить список друзей'
-INFO_SAVE_SELECTED:   str = 'Сохранить отмеченное'
+INFO_CHECK_SELECTED:  str = 'Проверить аудио друга'
 INFO_DOWNLOAD_MUSIC:  str = 'Скачать выбранные треки'
 INFO_AUTHORIZATION:   str = 'Настройки учетной записи'
 INFO_HELP:            str = 'Помощь'

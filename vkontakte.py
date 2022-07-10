@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtCore
 from requests.exceptions import ConnectionError
+from vk_api.exceptions import AccessDenied
 from vk_api.exceptions import LoginRequired
 from vk_api.exceptions import PasswordRequired
 from vk_api.exceptions import BadPassword
@@ -8,12 +9,15 @@ from vk_api.exceptions import Captcha
 from vk_api import audio
 import vk_api
 
+from config import ERROR_ACCESSDENIED
+from config import ERROR_EMPTYPASSWORD
+from config import ERROR_BADPASSWORD
 from config import VK_AUTHORIZATION
+from config import VK_AUDIO
+from config import VK_DENIED
 from config import VK_CAPTCHA
 from config import VK_FAILURE
 from config import VK_FRIENDS
-from config import ERROR_EMPTYPASSWORD
-from config import ERROR_BADPASSWORD
 from config import TERMINATE
 from config import Data
 
@@ -52,6 +56,7 @@ class VKontakte(QtCore.QThread):
                 # 'Connection aborted.', RemoteDisconnected('Remote end closed connection without response'
                 # HTTPSConnectionPool(host='vk.com', port=443): Max retries exceeded with url: /feed2.php (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x0000000003938C40>: Failed to establish a new connection: [Errno 11004] getaddrinfo failed'))
                 print(f'ConnectionError -> {error}')
+                print(str(error))
 
             except Exception as error:
                 print(f'Exception -> {error}')
@@ -81,6 +86,18 @@ class VKontakte(QtCore.QThread):
 
 
     #---------------------------------------------------------------------------
+    # Вернуть список музыки пользователя
+    #---------------------------------------------------------------------------
+    def get_audio(self, owner_id):
+        try:
+            data = self.audio.get(owner_id=owner_id)
+            self.signal.emit(Data(VK_AUDIO, data))
+
+        except AccessDenied:
+            self.signal.emit(Data(VK_DENIED, ERROR_ACCESSDENIED))
+
+
+    #---------------------------------------------------------------------------
     # QThread.run()
     #---------------------------------------------------------------------------
     def run(self):
@@ -90,6 +107,9 @@ class VKontakte(QtCore.QThread):
 
             elif data.id == VK_FRIENDS:
                 self.get_friends()
+
+            elif data.id == VK_AUDIO:
+                self.get_audio(data.item)
 
 
 
